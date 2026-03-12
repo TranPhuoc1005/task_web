@@ -1,71 +1,58 @@
-"use client";
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Task } from "@/types/task";
-import { useAuth } from "./useAuth";
 import {
     listTasksApi,
     createTaskApi,
     updateTaskApi,
     moveTaskApi,
-    removeTaskApi,
-    updateDueDateApi
+    deleteTaskApi,
+    updateDueDateApi,
 } from "@/services/task.api";
+import { useAuth } from "./useAuth";
 
 export function useTasks() {
     const queryClient = useQueryClient();
-    const { user, profile, profileQuery, currentUser } = useAuth();
+
+    const { currentUser } = useAuth();
 
     const tasksQuery = useQuery({
-        queryKey: ["tasks", user?.id, profile?.role],
-        enabled: !!user && profileQuery.isSuccess,
+        queryKey: ["tasks"],
         queryFn: listTasksApi,
     });
 
-    const addTask = useMutation({
+    const createTask = useMutation({
         mutationFn: createTaskApi,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
     });
 
     const updateTask = useMutation({
-        mutationFn: ({ id, updates }: { id: number; updates: Partial<Task> }) =>
-            updateTaskApi(id, updates),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        },
+        mutationFn: updateTaskApi,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
     });
 
     const moveTask = useMutation({
-        mutationFn: ({ id, status }: { id: number; status: Task["status"] }) =>
-            moveTaskApi(id, status),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        },
+        mutationFn: moveTaskApi,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
     });
 
     const deleteTask = useMutation({
-        mutationFn: removeTaskApi,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        },
+        mutationFn: deleteTaskApi,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
     });
 
     const updateDueDate = useMutation({
         mutationFn: ({ id, due_date }: { id: number; due_date: string }) => updateDueDateApi(id, due_date),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
-        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
     });
 
     return {
-        tasksQuery,
-        addTask,
+        currentUser,
+        tasks: tasksQuery.data || [],
+        isLoading: tasksQuery.isLoading,
+        isError: tasksQuery.isError,
+        createTask,
         updateTask,
         moveTask,
         deleteTask,
         updateDueDate,
-        currentUser,
     };
 }

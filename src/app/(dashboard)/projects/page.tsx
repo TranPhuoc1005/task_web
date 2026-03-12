@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useProjects } from "@/hook/useProjects";
 import ProjectModal from "@/components/projects/ProjectModal";
+import { Project } from "@/types/projects";
 
 const PROJECT_TYPE_LABELS = {
     web_development: "Web Development",
@@ -43,7 +44,7 @@ export default function ProjectsPage() {
 
     const canCreateProject = currentUser?.profile?.role === "admin" || currentUser?.profile?.role === "manager";
 
-    const filteredProjects = projects.filter((project: any) => {
+    const filteredProjects = projects.filter((project: Project) => {
         const matchesSearch =
             project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             project.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -59,7 +60,7 @@ export default function ProjectsPage() {
         return diffDays;
     };
 
-    const handleCreateProject = async (data: any) => {
+    const handleCreateProject = async (data: Partial<Project>) => {
         try {
             await createProject.mutateAsync(data);
             setIsModalOpen(false);

@@ -9,7 +9,7 @@ import { Task } from "@/types/task";
 type ViewMode = "month" | "week" | "day";
 
 export default function CalendarPage() {
-    const { tasksQuery, updateDueDate, currentUser } = useTasks();
+    const { tasks, updateDueDate, currentUser, isLoading } = useTasks();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<ViewMode>("month");
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -17,21 +17,22 @@ export default function CalendarPage() {
     const [selectedDateForTask, setSelectedDateForTask] = useState<string | undefined>(undefined);
     const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
-    const tasks = tasksQuery.data || [];
     const canCreateTask = currentUser?.profile?.role === "admin" || currentUser?.profile?.role === "manager";
 
     // Calendar calculations
-    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    const startDate = new Date(monthStart);
-    startDate.setDate(startDate.getDate() - startDate.getDay());
+    const { monthEnd, startDate } = useMemo(() => {
+        const mEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const sDate = new Date(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
+        sDate.setDate(sDate.getDate() - sDate.getDay());
+        return { monthEnd: mEnd, startDate: sDate };
+    }, [currentDate]);
 
     const calendarDays = useMemo(() => {
         const days = [];
         const endDate = new Date(monthEnd);
         endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
 
-        let currentDay = new Date(startDate);
+        const currentDay = new Date(startDate);
         while (currentDay <= endDate) {
             days.push(new Date(currentDay));
             currentDay.setDate(currentDay.getDate() + 1);
@@ -113,7 +114,6 @@ export default function CalendarPage() {
         newDate.setHours(12, 0, 0, 0);
         const newDueDate = newDate.toISOString();
 
-        // ✅ Sử dụng updateDueDate mutation
         await updateDueDate.mutateAsync({
             id: draggedTask.id,
             due_date: newDueDate,
@@ -128,7 +128,7 @@ export default function CalendarPage() {
         setIsTaskModalOpen(true);
     };
 
-    if (tasksQuery.isLoading) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -187,7 +187,9 @@ export default function CalendarPage() {
                             </button>
                         </div>
 
-                        <h2 className="text-lg font-semibold text-slate-900 min-w-auto md:min-w-[200px]">{formatMonthYear()}</h2>
+                        <h2 className="text-lg font-semibold text-slate-900 min-w-auto md:min-w-[200px]">
+                            {formatMonthYear()}
+                        </h2>
                     </div>
 
                     <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
