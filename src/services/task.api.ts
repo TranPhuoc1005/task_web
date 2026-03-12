@@ -70,7 +70,7 @@ export const createTaskApi = async (taskData: Partial<Task>): Promise<Task> => {
     if (!user) throw new Error("Not authenticated");
 
     // Prepare task data - remove id if it exists (auto-generated)
-    const { id, profiles, ...cleanTaskData } = taskData as any;
+    const { id, profiles, user_id, ...cleanTaskData } = taskData;
 
     // If user_id is not provided or is invalid, use current user
     const dataToInsert = {
@@ -78,8 +78,8 @@ export const createTaskApi = async (taskData: Partial<Task>): Promise<Task> => {
         created_by: user.id,
         // Only include user_id if it's a valid UUID, otherwise use current user
         user_id:
-            cleanTaskData.user_id && typeof cleanTaskData.user_id === "string" && cleanTaskData.user_id.length > 10
-                ? cleanTaskData.user_id
+            user_id && typeof user_id === "string" && user_id.length > 10
+                ? user_id
                 : user.id,
     };
 
@@ -112,20 +112,21 @@ export const updateTaskApi = async ({ id, updates }: { id: number; updates: Part
     const supabase = createClient();
 
     // Remove fields that shouldn't be updated
-    const { profiles, created_by, created_at, ...cleanUpdates } = updates as any;
+    const { profiles, created_by, created_at, user_id, ...cleanUpdates } = updates;
 
     // Validate user_id if it's being updated
-    if (cleanUpdates.user_id !== undefined) {
-        if (!cleanUpdates.user_id || typeof cleanUpdates.user_id !== "string" || cleanUpdates.user_id.length < 10) {
-            delete cleanUpdates.user_id;
-        }
-    }
+    const validatedUserId =
+        user_id && typeof user_id === "string" && user_id.length >= 10
+            ? { user_id }
+            : {};
 
-    console.log("Updating task with data:", cleanUpdates);
+    const finalUpdates = { ...cleanUpdates, ...validatedUserId };
+
+    console.log("Updating task with data:", finalUpdates);
 
     const { data, error } = await supabase
         .from("tasks")
-        .update({ ...cleanUpdates, updated_at: new Date().toISOString() })
+        .update({ ...finalUpdates, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select(
             `
