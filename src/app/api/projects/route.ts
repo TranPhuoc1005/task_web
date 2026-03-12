@@ -1,8 +1,9 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const body = await req.json();
         const supabase = await createServerSupabaseClient();
 
@@ -18,7 +19,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         const { data, error } = await supabase
             .from("projects")
             .update({ ...body, updated_at: new Date().toISOString() })
-            .eq("id", params.id)
+            .eq("id", id)
             .select()
             .single();
 
@@ -35,8 +36,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const supabase = await createServerSupabaseClient();
 
         const {
@@ -48,7 +50,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { error } = await supabase.from("projects").delete().eq("id", params.id);
+        const { error } = await supabase.from("projects").delete().eq("id", id);
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 400 });
