@@ -152,7 +152,7 @@ export function useDashboard() {
         status: task.status,
         priority: task.priority,
         due_date: task.due_date,
-        assignee: task.assignee,
+        assignee: task.profiles?.full_name || task.profiles?.email || undefined,
         created_at: task.created_at,
     }));
 

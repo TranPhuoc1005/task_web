@@ -202,8 +202,8 @@ export default function NotificationDropdown() {
                                                     <Clock className="w-3 h-3" />
                                                     Còn {getHoursLeft(task.due_date!)}
                                                 </span>
-                                                {task.assignee && (
-                                                    <span className="flex items-center gap-1">👤 {task.assignee}</span>
+                                                {task.profiles && (
+                                                    <span className="flex items-center gap-1">👤 {task.profiles.full_name || task.profiles.email}</span>
                                                 )}
                                             </div>
                                             <div className="text-xs text-slate-400 mt-1">

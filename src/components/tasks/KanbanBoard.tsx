@@ -7,7 +7,7 @@ import { useTasks } from "@/hook/useTasks";
 import { UserX, Users } from "lucide-react";
 
 export default function KanbanBoard() {
-    const { tasksQuery, moveTask, currentUser } = useTasks();
+    const { tasks, isError, moveTask, currentUser } = useTasks();
     const [draggedTask, setDraggedTask] = useState<Task | null>(null);
     const [showOnlyUnassigned, setShowOnlyUnassigned] = useState(false);
 
@@ -15,16 +15,15 @@ export default function KanbanBoard() {
 
     // Filter tasks dựa vào toggle
     const filteredTasks = useMemo(() => {
-        const tasks = tasksQuery.data || [];
         if (!showOnlyUnassigned) return tasks;
         return tasks.filter((task) => !task.user_id);
-    }, [tasksQuery.data, showOnlyUnassigned]);
+    }, [tasks, showOnlyUnassigned]);
 
     const unassignedCount = useMemo(() => {
-        return (tasksQuery.data || []).filter((task) => !task.user_id).length;
-    }, [tasksQuery.data]);
+        return tasks.filter((task) => !task.user_id).length;
+    }, [tasks]);
 
-    if (tasksQuery.error) return <p className="p-6 text-red-500">Error: {tasksQuery.error.message}</p>;
+    if (isError) return <p className="p-6 text-red-500">Error loading tasks</p>;
 
     const columns: Column[] = [
         {
